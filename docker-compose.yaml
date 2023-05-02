@@ -1,0 +1,55 @@
+version: "3.3"
+
+services:
+  db:
+    image: "mariadb:10.7.8"
+    restart: "always"
+    environment:
+      MYSQL_RANDOM_ROOT_PASSWORD: "true"
+      MYSQL_DATABASE: "promotions"
+      MYSQL_USER: "user"
+      MYSQL_PASSWORD: "password"
+    ports:
+      - "3306:3306"
+    volumes:
+      - "./init.sql:/docker-entrypoint-initdb.d/init.sql"
+    networks:
+      - "app"
+
+  updater:
+    build: "."
+    restart: "always"
+    depends_on: ["db"]
+    environment:
+      SERVER_PORT: "1321"
+      DB_USERNAME: "user"
+      DB_PASSWORD: "password"
+      DB_HOST: "db"
+      DB_PORT: "3306"
+      DB_NAME: "promotions"
+    command: "updater"
+    ports:
+      - "1322:1321"
+    networks:
+      - "app"
+
+  api:
+    build: "."
+    restart: "always"
+    depends_on: ["db"]
+    environment:
+      SERVER_PORT: "1321"
+      DB_USERNAME: "user"
+      DB_PASSWORD: "password"
+      DB_HOST: "db"
+      DB_PORT: "3306"
+      DB_NAME: "promotions"
+      DB_MAX_OPEN_CONNECTIONS: "128"
+    command: "api"
+    ports:
+      - "1321:1321"
+    networks:
+      - "app"
+
+networks:
+  app:
